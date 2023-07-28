@@ -1,0 +1,60 @@
+# coding:utf-8
+from datetime import datetime
+import pymysql
+import RandomValue
+
+# 定义数据库连接参数
+db = pymysql.connect(
+    user="root",
+    password="xzq3576367",
+    host="localhost",
+    database="bigdata",
+    port=3306,
+    charset="utf8",
+)
+
+
+# 获取游标批量插入
+def Insert_all(number):
+    cursor = db.cursor()
+    # 主键，从1开始自增
+    pk = 1
+    # 记录开始时间
+    start_time = datetime.now()
+    # 外循环10次，每次插入1w条
+    for i in range(10):
+        # 单词循环结果放入列表中
+        usersvalues = []
+        # 内循环1w次，写入1w条到list
+        while pk <= number:
+            usersvalues.append((pk,
+                                RandomValue.random_int(9),
+                                RandomValue.GetName(), RandomValue.GetJob(),
+                                RandomValue.GetGender(),
+                                RandomValue.random_date("1999-07-12T14:12:06", "2022-07-12T14:12:06"),
+                                RandomValue.getNum(2, 20) * 1000,
+                                RandomValue.random_str(4),
+                                RandomValue.random_int(4)
+                                ))
+            pk += 1
+        try:
+            cursor.executemany('insert into emp_copy values( %s,%s,%s,%s,%s,%s,%s,%s,%s)', usersvalues)
+        except Exception as e:
+            print(e)
+        #     用number控制pk主键自增至
+        number = number + 10000
+        # 外循环完成1次，内循环1w次，提交一次
+        db.commit()
+    #     全部循环完成，获取结束时间
+    endtime = datetime.now()
+    cost_time = endtime - start_time
+    # 关闭游标，关闭链接
+    cursor.close()
+    db.close()
+    print("总共耗时")
+    print(cost_time)
+
+
+if __name__ == '__main__':
+    # 插入1w*10  10w行数据
+    Insert_all(10000)
